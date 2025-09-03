@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 // Removed ThemeProvider - using light mode only
 import { TopBar, DeviceStatus } from "./components/TopBar";
 import { WasteTypeList, SortMode } from "./components/WasteTypeList";
@@ -13,6 +14,18 @@ import { PersonalCenterPage } from "./components/PersonalCenterPage";
 type EntryMode = "normal" | "backfill";
 
 export default function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // 根据URL路径确定活跃的标签页
+  const getActiveTabFromPath = (): NavigationTab => {
+    const path = location.pathname;
+    if (path.startsWith('/statistics')) return 'statistics';
+    if (path.startsWith('/devices')) return 'devices';
+    if (path.startsWith('/profile')) return 'profile';
+    return 'collection';
+  };
+
   // Device status
   const [printerStatus, setPrinterStatus] = useState<DeviceStatus>("connected");
   const [scaleStatus, setScaleStatus] = useState<DeviceStatus>("disconnected");
@@ -21,8 +34,20 @@ export default function App() {
   const [companyName] = useState<string>("杭州示例化工有限公司");
   const [operatorName] = useState<string>("张操作员");
 
-  // Navigation
-  const [activeTab, setActiveTab] = useState<NavigationTab>("collection");
+  // Navigation - 根据URL初始化
+  const [activeTab, setActiveTab] = useState<NavigationTab>(getActiveTabFromPath());
+
+  // 监听路径变化并更新活跃标签页
+  useEffect(() => {
+    const newTab = getActiveTabFromPath();
+    setActiveTab(newTab);
+  }, [location.pathname]);
+
+  // 修改标签页切换函数以支持路由
+  const handleTabChange = (tab: NavigationTab) => {
+    setActiveTab(tab);
+    navigate(`/${tab}`);
+  };
 
   // Entry mode for data collection
   const [entryMode, setEntryMode] = useState<EntryMode>("normal");
@@ -377,7 +402,7 @@ export default function App() {
       <div className="flex-shrink-0 border-t border-border relative z-50">
         <BottomNavigation
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
         />
       </div>
     </div>

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Database, TrendingUp } from "lucide-react";
 import { HistoryRecordsPage } from "./HistoryRecordsPage";
 import { DataAnalyticsPanel } from "./DataAnalyticsPanel";
@@ -6,7 +7,28 @@ import { DataAnalyticsPanel } from "./DataAnalyticsPanel";
 type TabType = 'history' | 'analytics';
 
 export function HistoryAnalyticsTabPage() {
-  const [activeTab, setActiveTab] = useState<TabType>('history');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // 根据URL路径确定活跃的标签页
+  const getActiveTabFromPath = (): TabType => {
+    if (location.pathname.includes('/analytics')) return 'analytics';
+    return 'history';
+  };
+
+  const [activeTab, setActiveTab] = useState<TabType>(getActiveTabFromPath());
+
+  // 监听路径变化并更新活跃标签页
+  useEffect(() => {
+    const newTab = getActiveTabFromPath();
+    setActiveTab(newTab);
+  }, [location.pathname]);
+
+  // 修改标签页切换函数以支持路由
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    navigate(`/statistics/${tab}`);
+  };
 
   const tabs = [
     {
@@ -37,7 +59,7 @@ export function HistoryAnalyticsTabPage() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`
                     flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300
                     ${isActive 
